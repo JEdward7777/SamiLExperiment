@@ -4,6 +4,7 @@ from subprocess import run
 from threading import Thread
 import os
 import shutil
+import sys
 
 import osis_tran
 
@@ -44,7 +45,7 @@ TARGETS = list(TRAIN_STARTS)
 
 SRC='2TGreek'
 
-GLOSSARIES = ['TGT_' + m.lstrip('*') for m in MODULES]
+GLOSSARIES = ['TGT_' + m.lstrip('*') for m in MODULES] + ['TGT_TEMPLATE']
 
 def apply_bpe(fname):
     with open(TMP + '/' + fname) as inf:
@@ -64,10 +65,10 @@ def main():
     os.mkdir(PREP)
     os.mkdir(TMP)
 
-    # if not os.path.exists('mosesdecoder'):
-    #     run('git clone https://github.com/moses-smt/mosesdecoder.git', shell=True)
-    # if not os.path.exists('subword-nmt'):
-    #     run('git clone https://github.com/rsennrich/subword-nmt.git', shell=True)
+    if not os.path.exists('mosesdecoder'):
+        print('ERROR: Directory "mosesdecoder" does not exist.', file=sys.stderr)
+        print('Did you git clone without --recurse-submodules?', file=sys.stderr)
+        sys.exit(1)
 
     train_mods = {}
     val_mods = {}
@@ -110,8 +111,17 @@ def main():
     with open(TMP + '/protect', 'w') as f:
         print('TGT_[a-zA-Z0-9]+', file=f)
 
+    # For BPE, learn source language only 1+SRC_TOKEN_EXTRA_WEIGHT times.
+    with open(TMP + '/src-once', 'w') as f:
+        for i in range(1+SRC_TOKEN_EXTRA_WEIGHT):
+            print('\n'.join(src_mod.values()), file=f)
+
+    # Also create a file for the source exactly once - it's useful down the road
+    src_template = ['TGT_TEMPLATE ' + x for x in src_mod.values()]
+
     for data, fname in [(src_data, 'tok.src'), (tgt_data, 'tok.tgt'),
-                        (val_src_data, 'val.src'), (val_tgt_data, 'val.tgt')]:
+                        (val_src_data, 'val.src'), (val_tgt_data, 'val.tgt'),
+                        (src_template, 'src-template')]:
         CMD = ['perl', TOKENIZER, '-threads', '8', '-protected',
                TMP+'/protect', '-l', 'nosuchlanguage']
         with open(TMP + '/' + fname, 'w') as f:
@@ -121,11 +131,6 @@ def main():
         CMD = ['perl', CLEAN, '-ratio', str(CLEAN_RATIO), TMP+'/'+s, 'src', 'tgt',
                TMP + '/' + d, '1', '175']
         run(CMD, check=True)
-
-    # for BPE, learn source language only once
-    with open(TMP + '/src-once', 'w') as f:
-        for i in range(1+SRC_TOKEN_EXTRA_WEIGHT):
-            print('\n'.join(src_mod.values()), file=f)
 
     run('cat {tmp}/src-once {tmp}/train.tgt >{tmp}/train.both'.format(tmp=TMP),
         shell=True, check=True)
@@ -144,6 +149,11 @@ def main():
             th = Thread(target=apply_bpe, args=[fname])
             th.start()
             threads.append(th)
+
+    print('apply_bpe.py to src-template...')
+    th = Thread(target=apply_bpe, args=['src-template'])
+    th.start()
+    threads.append(th)
 
     for t in threads:
         t.join()
