@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=0 script -c 'python train.py data-bin/bible.prep --lr 0.25 --clip-norm 0.1 --dropout 0.2 --max-tokens 3000 --label-smoothing 0.1 --arch fconv_wmt_en_ro --save-dir checkpoints/bible.prep --force-anneal 50000'
