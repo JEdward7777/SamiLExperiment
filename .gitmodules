@@ -2,3 +2,10 @@
     path = fairseq/model_parallel/megatron
     url = https://github.com/ngoyal2707/Megatron-LM
     branch = fairseq
+[submodule "data/mosesdecoder"]
+	path = data/mosesdecoder
+	url = https://github.com/sliedes/mosesdecoder.git
+	branch = no_lang_specific
+[submodule "data/subword-nmt"]
+	path = data/subword-nmt
+	url = https://github.com/sliedes/subword-nmt

@@ -64,10 +64,10 @@ def main():
     os.mkdir(PREP)
     os.mkdir(TMP)
 
-    if not os.path.exists('mosesdecoder'):
-        run('git clone https://github.com/moses-smt/mosesdecoder.git', shell=True)
-    if not os.path.exists('subword-nmt'):
-        run('git clone https://github.com/rsennrich/subword-nmt.git', shell=True)
+    # if not os.path.exists('mosesdecoder'):
+    #     run('git clone https://github.com/moses-smt/mosesdecoder.git', shell=True)
+    # if not os.path.exists('subword-nmt'):
+    #     run('git clone https://github.com/rsennrich/subword-nmt.git', shell=True)
 
     train_mods = {}
     val_mods = {}
