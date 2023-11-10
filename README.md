@@ -4,7 +4,7 @@ This is the code for the article [Machine translating the Bible into new languag
 
 The preprocessing step requires a slightly modified version of the Moses tokenizer. This and another dependency are thus included as Git submodules. For this reason, you need to also clone the subrepositories. The easiest way to do this is to use this command to clone the repository:
 
-`git clone --recurse-submodules https://github.com/sliedes/fairseq-py`
+`git clone --recurse-submodules https://github.com/JEdward7777/SamiLExperiment`
 
 Install PyTorch either from source or from [http://pytorch.org/](http://pytorch.org/).
 
