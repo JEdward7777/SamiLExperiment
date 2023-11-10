@@ -6,21 +6,22 @@ The preprocessing step requires a slightly modified version of the Moses tokeniz
 
 `git clone --recurse-submodules https://github.com/sliedes/fairseq-py`
 
-Install PyTorch >= 0.3.0 either from source or from [http://pytorch.org/](http://pytorch.org/).
+Install PyTorch either from source or from [http://pytorch.org/](http://pytorch.org/).
 
-Build the C extensions for Fairseq and install:
+Install Fairseq:
 
 ```
-$ pip install -r requirements.txt
-$ CFLAGS=-I/opt/cuda/include python setup.py build
-$ python setup.py develop
+$ pip install --editable ./
 ```
 
 To prepare the data set:
 
 1. Install the SWORD project's tools on your computer. For example, for Debian derivative distributions they are available in a package named *libsword-utils*.
 1. Install the Bible modules you want to include in the corpus. You can do this using the *installmgr* command line tool, or from a Bible software package such as BibleTime.
+1. The list of Bible modules currently configured for are in `data/prepare_bible.py`.
 1. Edit `data/prepare_bible.py` to list the modules in the MODULES variable. Those prefixed with an asterisk will be romanized. Also set the attention language (variable SRC), and edit TRAIN_STARTS to exclude portions of some translations from training and use them as the validation/test set.
+1. Install unidecode used by prepare_bible: `pip install unidecode`
+1. Verify that the command `mod2imp` is in your command path from installing libsword-utils.  It is called by `prepare_bible`.
 
 Now run the following commands:
 
@@ -28,7 +29,7 @@ Now run the following commands:
 $ cd data
 $ ./prepare_bible.py
 $ cd ..
-$ python preprocess.py --source-lang src --target-lang tgt \
+$ python ./fairseq_cli/preprocess.py --source-lang src --target-lang tgt \
   --trainpref data/bible.prep/train --validpref data/bible.prep/valid \
   --testpref data/bible.prep/test --destdir data-bin/bible.prep
 ```
@@ -38,8 +39,9 @@ Now you will have a binarized dataset in data-bin/bible.prep. You can use `train
 ```
 $ mkdir -p checkpoints/bible.prep
 $ CUDA_VISIBLE_DEVICES=0 python train.py data-bin/bible.prep \
-  --lr 0.25 --clip-norm 0.1 --dropout 0.2 --max-tokens 3000 \
-  --arch fconv_wmt_en_ro --save-dir checkpoints/bible.prep
+  --optimizer adam --lr 0.0001 --clip-norm 0.1 --dropout 0.2 --max-tokens 3000 \
+  --arch fconv_wmt_en_ro --save-dir checkpoints/bible.prep \
+  --tensorboard-logdir tb_logs/bible.prep
 ```
 
 Adjust the --max-tokens value if you run out of GPU memory.
@@ -47,11 +49,11 @@ Adjust the --max-tokens value if you run out of GPU memory.
 You can generate translations of the test/validation set with with generate.py:
 
 ```
-$ python generate.py data-bin/bible.prep --path checkpoints/bible.prep/checkpoint_best.pt \
+$ python ./fairseq_cli/generate.py data-bin/bible.prep --path checkpoints/bible.prep/checkpoint_best.pt \
   --batch-size 10 --beam 120 --remove-bpe
 ```
 
-To generate full translations, use the generated template in `data/bible.prep/src-template`. For each line, replace the `TGT_TEMPLATE` tag by one that corresponds to a translation; for example, `TGT_ESV2011` for English or `TGT_FinPR` for Finnish:
+To generate full translations, use the generated template in `data/bible.prep/src-template`. For each line, replace the `TGT_TEMPLATE` tag by one that corresponds to a translation; for example, `TGT_NETfree` for English or `TGT_FinPR` for Finnish:
 
 `$ sed -e s/TGT_TEMPLATE/TGT_FinPR/ <data/bible.prep/src-template >src.FinPR`
 
