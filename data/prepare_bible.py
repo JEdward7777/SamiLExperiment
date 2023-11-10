@@ -21,20 +21,35 @@ TMP = PREP + '/tmp'
 BPE_CODE = PREP + '/code'
 
 # starts with * --> unidecode
+# MODULES = [
+#     '*2TGreek', 'Afr1953', 'Alb', 'BasHautin', '*Bela', 'BretonNT', '*BulVeren',
+#     '*CSlElizabeth', 'Chamorro', '*ChiNCVs', 'Cro', 'CzeCEP', 'DaOT1931NT1907',
+#     '*Dari', 'DutSVV', 'ESV2011', 'Esperanto', 'Est', '*FarTPV', 'FrePGR',
+#     'FinPR', 'GerNeUe', '*GreVamvas', 'Haitian', '*HebModern', '*HinERV',
+#     'HunUj', 'ItaRive', 'Kekchi', '*KorHKJV', 'LtKBB', 'LvGluck8', 'ManxGaelic',
+#     'Maori', 'Mg1865', 'Norsk', 'NorthernAzeri', '*Peshitta', 'PolUGdanska',
+#     'PorAlmeida1911', 'PotLykins', 'RomCor', '*RusSynodal', 'ScotsGaelic',
+#     'SloStritar', 'SomKQA', 'SpaRV', 'Swahili', 'SweFolk1998', 'TagAngBiblia',
+#     'TurHADI', '*Ukrainian', 'Vulgate'
+# ]
+
 MODULES = [
+    'NETfree',
+
     '*2TGreek', 'Afr1953', 'Alb', 'BasHautin', '*Bela', 'BretonNT', '*BulVeren',
-    '*CSlElizabeth', 'Chamorro', '*ChiNCVs', 'Cro', 'CzeCEP', 'DaOT1931NT1907',
-    '*Dari', 'DutSVV', 'ESV2011', 'Esperanto', 'Est', '*FarTPV', 'FrePGR',
+    'CzeCEP',
+    'DutSVV', 'Esperanto', 'FrePGR',
     'FinPR', 'GerNeUe', '*GreVamvas', 'Haitian', '*HebModern', '*HinERV',
-    'HunUj', 'ItaRive', 'Kekchi', '*KorHKJV', 'LtKBB', 'LvGluck8', 'ManxGaelic',
-    'Maori', 'Mg1865', 'Norsk', 'NorthernAzeri', '*Peshitta', 'PolUGdanska',
-    'PorAlmeida1911', 'PotLykins', 'RomCor', '*RusSynodal', 'ScotsGaelic',
+    'HunUj', 'ItaRive', 'Kekchi', '*KorHKJV', 'ManxGaelic',
+    'Maori', 'PolUGdanska',
+    'PorAlmeida1911', 'PotLykins', 'RomCor', '*RusSynodal', 
     'SloStritar', 'SomKQA', 'SpaRV', 'Swahili', 'SweFolk1998', 'TagAngBiblia',
     'TurHADI', '*Ukrainian', 'Vulgate'
 ]
 
 TRAIN_STARTS = {
-    'ESV2011': 'Matt',
+    'NETfree': 'Matt',
+    #'ESV2011': 'Matt',
     'FinPR': 'Exod',
     'GerNeUe': 'Exod'
 }
