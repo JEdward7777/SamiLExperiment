@@ -1,3 +1,12 @@
+# IntroIntro
+
+This project is a fork from an [experiment by Sami Liedes](https://github.com/sliedes/fairseq-py).
+
+This fork updates fairseq to the latest version as of 11/10/2023 and modifies this readme to handle the changes in the library and the corresponding tools.
+
+This update is a work in progress.
+
+
 # Introduction
 
 This is the code for the article [Machine translating the Bible into new languages](https://samiliedes.wordpress.com/2018/03/07/machine-translating-the-bible-into-new-languages/).
