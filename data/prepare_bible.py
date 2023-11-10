@@ -34,9 +34,9 @@ MODULES = [
 ]
 
 TRAIN_STARTS = {
-    'ESV2011': 'Matt.',
-    'FinPR': 'Exod.',
-    'GerNeUe': 'Exod.'
+    'ESV2011': 'Matt',
+    'FinPR': 'Exod',
+    'GerNeUe': 'Exod'
 }
 
 SRC_TOKEN_EXTRA_WEIGHT = 2

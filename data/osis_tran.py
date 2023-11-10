@@ -21,31 +21,59 @@ RE = re.compile(r'<verse osisID="([^"]+)">(.*)</verse>')
 TAG_RE = re.compile(r'<[^<>]+>')
 SPACE_RE = re.compile(r' +')
 
-def load_osis_str(inp, toascii=False):
-    inp = inp.split('\n')
-    dic = OrderedDict()
-    for i, line in enumerate(inp):
-        line = line.strip()
-        if not line or line.startswith('$'):
-            continue
-        r = RE.match(line)
-        #assert r, line
-        if not r:
-            continue
-        key = r.group(1)
-        v = r.group(2).strip()
-        for c in RM_CHARS:
-            v = v.replace(c, '')
-        for r, t in REPL_CHARS.items():
-            v = v.replace(r, t)
+# def load_osis_str(inp, toascii=False):
+#     inp = inp.split('\n')
+#     dic = OrderedDict()
+#     for i, line in enumerate(inp):
+#         line = line.strip()
+#         if not line or line.startswith('$'):
+#             continue
+#         r = RE.match(line)
+#         #assert r, line
+#         if not r:
+#             continue
+#         key = r.group(1)
+#         v = r.group(2).strip()
+#         for c in RM_CHARS:
+#             v = v.replace(c, '')
+#         for r, t in REPL_CHARS.items():
+#             v = v.replace(r, t)
 
-        v = TAG_RE.sub(' ', v.strip())
-        v = SPACE_RE.sub(' ', v)
-        v = v.lower()
-        if toascii:
-            v = unidecode(v)
-        dic[key] = v
+#         v = TAG_RE.sub(' ', v.strip())
+#         v = SPACE_RE.sub(' ', v)
+#         v = v.lower()
+#         if toascii:
+#             v = unidecode(v)
+#         dic[key] = v
+#     return dic
+
+def load_osis_str( inp, toascii=False ):
+    key = "root"
+    dic = OrderedDict()
+    for line in inp.split('\n'):
+        line = line.strip()
+
+        if line.startswith( "$$$" ):
+            key = line[3:].strip()
+        else:
+            v = line
+            for c in RM_CHARS:
+                v = v.replace( c, '' )
+            for r, t in REPL_CHARS.items():
+                v = v.replace( r, t )
+            v = TAG_RE.sub( ' ', v.strip() )
+            v = SPACE_RE.sub( ' ', v )
+            v = v.lower()
+            if toascii:
+                v = unidecode( v )
+            v = v.strip()
+            if v:
+                dic[key] = v
     return dic
+
+            
+
+
 
 
 def load_osis_file(fname, **kwargs):
