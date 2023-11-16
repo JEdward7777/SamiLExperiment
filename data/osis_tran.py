@@ -89,10 +89,13 @@ def load_osis_module(modname, **kwargs):
     return load_osis_str(r.stdout, **kwargs)
 
 
-def gen_trans(src, tgt):
+def gen_trans(src, tgt, include_key=False):
     for key in tgt:
         if key in src:
-            yield src[key], tgt[key]
+            if include_key:
+                yield key, src[key], tgt[key]
+            else:
+                yield src[key], tgt[key]
 
 
 def split_at_key(split_key, od):

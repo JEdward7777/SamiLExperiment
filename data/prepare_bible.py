@@ -46,6 +46,28 @@ MODULES = [
     'SloStritar', 'SomKQA', 'SpaRV', 'Swahili', 'SweFolk1998', 'TagAngBiblia',
     'TurHADI', '*Ukrainian', 'Vulgate'
 ]
+#https://chat.openai.com/share/c0735602-accf-4579-8d6e-5af612712ac4
+# NETfree: This is likely related to the New English Translation (NET) of the Bible, which is a modern English translation.
+# DutSVV: This is likely related to the Statenvertaling (SVV), which is a Dutch translation of the Bible.
+# Esperanto: This is a constructed international auxiliary language, and the module likely contains a translation of the Bible into Esperanto.
+# FrePGR: This is likely related to a French translation of the Bible.
+# GerNeUe: This is likely related to the Neue Evangelistische Übersetzung (NeUe), which is a modern German translation of the Bible.
+# ItaRive: This is likely related to an Italian translation of the Bible.
+# PorAlmeida1911: This is likely related to the Almeida 1911 version of the Bible in Portuguese.
+# SweFolk1998: This is likely related to the Swedish FolkBibeln 1998, which is a Swedish translation of the Bible.
+# TagAngBiblia: This is likely related to a Tagalog translation of the Bible.
+# TurHADI: This is likely related to the Turkish translation HADI.
+# *2TGreek: This seems to be related to the Greek New Testament.
+# *Bela: This seems to be related to a translation in the Belarusian language.
+# BretonNT: This is likely related to a Breton translation of the New Testament.
+# CzeCEP: This is likely related to a Czech translation, possibly the Czech Ecumenical Version (CEP).
+# GreVamvas: This is likely related to a Greek translation by Vamvas.
+# HebModern: This is likely related to a modern Hebrew translation.
+# HinERV: This is likely related to a Hindi translation, possibly the Easy-to-Read Version (ERV).
+# KorHKJV: This is likely related to a Korean translation based on the King James Version (KJV).
+# RusSynodal: This is likely related to the Russian Synodal translation.
+# Ukrainian: This is likely related to a Ukrainian translation.
+# Vulgate: This refers to the Latin Vulgate, a late 4th-century Latin translation of the Bible.
 
 TRAIN_STARTS = {
     'NETfree': 'Matt',
@@ -76,9 +98,9 @@ def main():
     assert not (set(TRAIN_STARTS) - set(modnames)), (set(TRAIN_STARTS) - set(modnames))
     assert not (set(TARGETS) - set(modnames)), (set(TARGETS) - set(modnames))
 
-    shutil.rmtree(PREP, ignore_errors=True)
-    os.mkdir(PREP)
-    os.mkdir(TMP)
+    #shutil.rmtree(PREP, ignore_errors=True)
+    os.makedirs(PREP, exist_ok=True)
+    os.makedirs(TMP, exist_ok=True)
 
     if not os.path.exists('mosesdecoder'):
         print('ERROR: Directory "mosesdecoder" does not exist.', file=sys.stderr)
@@ -115,12 +137,14 @@ def main():
                 src_data.append('TGT_' + tgt_mod + ' ' + src_line)
                 tgt_data.append(tgt_line)
 
+    val_keys = []
     val_src_data = []
     val_tgt_data = []
     for tgt_mod in val_mods:
-        for src_line, tgt_line in osis_tran.gen_trans(src_mod, val_mods[tgt_mod]):
+        for key, src_line, tgt_line in osis_tran.gen_trans(src_mod, val_mods[tgt_mod], include_key=True):
             val_src_data.append('TGT_' + tgt_mod + ' ' + src_line)
             val_tgt_data.append(tgt_line)
+            val_keys.append(key + " " + tgt_mod)
 
     print('Preprocessing train data...')
     with open(TMP + '/protect', 'w') as f:
@@ -141,6 +165,11 @@ def main():
                TMP+'/protect', '-l', 'nosuchlanguage']
         with open(TMP + '/' + fname, 'w') as f:
             run(CMD, input='\n'.join(data), stdout=f, check=True, encoding='utf-8')
+
+    #save out the val_keys as well.
+    with open(PREP + '/valid.keys', 'w') as f:
+        for key in val_keys:
+            print(key, file=f)
 
     for s, d in [('tok', 'train'), ('val', 'valid')]:
         CMD = ['perl', CLEAN, '-ratio', str(CLEAN_RATIO), TMP+'/'+s, 'src', 'tgt',
