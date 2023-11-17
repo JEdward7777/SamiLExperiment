@@ -15,6 +15,11 @@ The preprocessing step requires a slightly modified version of the Moses tokeniz
 
 `git clone --recurse-submodules https://github.com/JEdward7777/SamiLExperiment`
 
+You need `Python.h`, this is installed on Ubuntu with
+``` bash
+$ sudo apt install python3-dev
+```
+
 Install PyTorch either from source or from [http://pytorch.org/](http://pytorch.org/).
 
 Install Fairseq:
@@ -30,6 +35,7 @@ To prepare the data set:
 1. The list of Bible modules currently configured for are in `data/prepare_bible.py`.
 1. Edit `data/prepare_bible.py` to list the modules in the MODULES variable. Those prefixed with an asterisk will be romanized. Also set the attention language (variable SRC), and edit TRAIN_STARTS to exclude portions of some translations from training and use them as the validation/test set.
 1. Install unidecode used by prepare_bible: `pip install unidecode`
+1. Install tensorboardX: `pip install tensorboardX`
 1. Verify that the command `mod2imp` is in your command path from installing libsword-utils.  It is called by `prepare_bible`.
 
 Now run the following commands:

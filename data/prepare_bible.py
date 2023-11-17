@@ -33,9 +33,15 @@ BPE_CODE = PREP + '/code'
 #     'TurHADI', '*Ukrainian', 'Vulgate'
 # ]
 
+
+#still missing 'Cro', 'ESV2011', 
+
+#can't decode byte 'Chamorro', 
 MODULES = [
+
     'NETfree',
 
+    #books I found the first time.
     '*2TGreek', 'Afr1953', 'Alb', 'BasHautin', '*Bela', 'BretonNT', '*BulVeren',
     'CzeCEP',
     'DutSVV', 'Esperanto', 'FrePGR',
@@ -44,7 +50,18 @@ MODULES = [
     'Maori', 'PolUGdanska',
     'PorAlmeida1911', 'PotLykins', 'RomCor', '*RusSynodal', 
     'SloStritar', 'SomKQA', 'SpaRV', 'Swahili', 'SweFolk1998', 'TagAngBiblia',
-    'TurHADI', '*Ukrainian', 'Vulgate'
+    'TurHADI', '*Ukrainian', 'Vulgate',
+
+
+    #books I found after learning how the filter worked.
+    '*CSlElizabeth', '*ChiNCVs', 'DaOT1931NT1907', '*Dari', 'Est', '*FarTPV', 
+    'LtKBB', 'LvGluck8', 'Mg1865', 'Norsk', 'NorthernAzeri', '*Peshitta', 'ScotsGaelic', 
+
+    'agm2004eb',
+    #new books       54          55        56              57        58            59           60
+    '*crx2011eb', '*agr2020eb', '*BEZ', 'bqcsim2010eb', 'sbl2005eb', 'BurCBCM', 'cam2017eb', 'mih1979eb',
+    #  61            62           63            64           65             66          67           69          70
+    'dig2019eb', 'ebk2003eb', 'etr2012eb', '*arz2020eb', '*gaq2020eb', '*ghs1975eb', 'tee1976eb', 'ino2013eb', 'jni2020eb',
 ]
 #https://chat.openai.com/share/c0735602-accf-4579-8d6e-5af612712ac4
 # NETfree: This is likely related to the New English Translation (NET) of the Bible, which is a modern English translation.
