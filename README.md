@@ -54,7 +54,7 @@ Now you will have a binarized dataset in data-bin/bible.prep. You can use `train
 ``` bash
 $ mkdir -p checkpoints/bible.prep
 $ CUDA_VISIBLE_DEVICES=0 python train.py data-bin/bible.prep \
-  --optimizer adam --lr 0.0001 --clip-norm 0.1 --dropout 0.2 --max-tokens 3000 \
+  --optimizer adam --lr 0.0001 --clip-norm 0.1 --dropout 0.4 --max-tokens 3000 \
   --arch fconv_wmt_en_ro --save-dir checkpoints/bible.prep \
   --tensorboard-logdir tb_logs/bible.prep
 ```
@@ -122,3 +122,6 @@ The output file has the translated sentences in length order. To sort them in th
 `$ ./sort_full.py <FinPR.raw.txt >FinPR.txt`
 
 For more useful information in the original README for fairseq-py, consult [README.fairseq.md](README.fairseq.md).
+
+He had 53 bibles.
+I have 38 bibles
