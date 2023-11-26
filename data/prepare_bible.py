@@ -101,6 +101,9 @@ SRC='2TGreek'
 
 GLOSSARIES = ['TGT_' + m.lstrip('*') for m in MODULES] + ['TGT_TEMPLATE']
 
+#set the BIBLE_LOADER as configurable as well.
+BIBLE_LOADER = osis_tran.load_osis_module
+
 def apply_bpe(fname):
     with open(TMP + '/' + fname) as inf:
         with open(PREP + '/' + fname, 'w') as outf:
@@ -133,7 +136,7 @@ def main():
         if m[0] == '*':
             decode = True
             m = m[1:]
-        train_mod = osis_tran.load_osis_module(m, toascii=decode)
+        train_mod = BIBLE_LOADER(m, toascii=decode)
         if m in TRAIN_STARTS:
             val_mod, train_mod = osis_tran.split_at_key(TRAIN_STARTS[m], train_mod)
             val_mods[m] = val_mod
@@ -150,7 +153,7 @@ def main():
         if tgt_mod in TARGETS:
             passes += TARGET_EXTRA_PASSES
         for i in range(passes):
-            for src_line, tgt_line in osis_tran.gen_trans(src_mod, train_mods[tgt_mod]):
+            for src_line, tgt_line in osis_tran.gen_trans(src_mod, train_mods[tgt_mod], module_name=tgt_mod):
                 src_data.append('TGT_' + tgt_mod + ' ' + src_line)
                 tgt_data.append(tgt_line)
 
