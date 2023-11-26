@@ -100,7 +100,7 @@ def main():
            .replace( "2JN", "II John" )
            .replace( "3JN", "III John" )
            .replace( "JUD", "Jude" )
-           .replace( "REV", "Revelation" ) )
+           .replace( "REV", "Revelation of John" ) )
         
         #make sure we didn't miss one.
         assert( ref[3] != ' ' or ref[:3] == "Job" or ref[:3] == "III" )
