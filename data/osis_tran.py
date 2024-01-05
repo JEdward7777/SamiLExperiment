@@ -113,7 +113,7 @@ def gen_trans(src, tgt, include_key=False, module_name=None):
             
             'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', 'I Corinthians', 'II Corinthians','Galatians',
             'Ephesians', 'Philippians', 'Colossians', 'I Thessalonians', 'II Thessalonians', 'I Timothy', 'II Timothy', 
-            'Titus', 'Philemon', 'Hebrews', 'James', 'I Peter', 'II Peter', 'I John', 'II John', 'III John', 'Revelation of John']
+            'Titus', 'Philemon', 'Hebrews', 'James', 'I Peter', 'II Peter', 'I John', 'II John', 'III John', 'Jude', 'Revelation of John']
 
          
             blacklist_book_names = [ 'Tobit', 'Judith', 'Esther (Greek)', 'Wisdom', 'Sirach', 'Baruch', 'Prayer of Azariah', 

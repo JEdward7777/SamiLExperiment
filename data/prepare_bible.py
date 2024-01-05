@@ -118,7 +118,7 @@ def main():
     assert not (set(TRAIN_STARTS) - set(modnames)), (set(TRAIN_STARTS) - set(modnames))
     assert not (set(TARGETS) - set(modnames)), (set(TARGETS) - set(modnames))
 
-    #shutil.rmtree(PREP, ignore_errors=True)
+    shutil.rmtree(PREP, ignore_errors=True)
     os.makedirs(PREP, exist_ok=True)
     os.makedirs(TMP, exist_ok=True)
 
