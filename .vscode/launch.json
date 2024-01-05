@@ -21,6 +21,19 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "cwd": "${fileDirname}",
+        },
+        {
+            "name": "Batch translate validation",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/batch_translate.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--model", "checkpoints/bible.prep/checkpoint_best.pt",
+                "--dictdir", "data-bin/bible.prep",
+                "--beam", "120", "--batch-size", "10", "valid.src"
+            ]
         }
     ]
 }
