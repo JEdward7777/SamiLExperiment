@@ -104,12 +104,12 @@ GLOSSARIES = ['TGT_' + m.lstrip('*') for m in MODULES] + ['TGT_TEMPLATE']
 #set the BIBLE_LOADER as configurable as well.
 BIBLE_LOADER = osis_tran.load_osis_module
 
-def apply_bpe(fname):
-    with open(TMP + '/' + fname) as inf:
-        with open(PREP + '/' + fname, 'w') as outf:
-            CMD = (['python', BPEROOT+'/apply_bpe.py', '--glossaries'] + GLOSSARIES +
-                   ['-c', BPE_CODE])
-            run(CMD, stdin=inf, stdout=outf, check=True)
+def apply_bpe(fname, tmp, prep, bperoot, bpe_code, glossaries):
+    with open(tmp + '/' + fname) as inf:
+        with open(prep + '/' + fname, 'w') as outf:
+            cmd = (['python', bperoot+'/apply_bpe.py', '--glossaries'] + glossaries +
+                   ['-c', bpe_code])
+            run(cmd, stdin=inf, stdout=outf, check=True)
 
 
 def main():
@@ -210,12 +210,12 @@ def main():
         for s in ('train', 'valid'):
             fname = s + '.' + l
             print('apply_bpe.py to ' + fname + '...')
-            th = Thread(target=apply_bpe, args=[fname])
+            th = Thread(target=apply_bpe, args=[fname, TMP, PREP, BPEROOT, BPE_CODE, GLOSSARIES])
             th.start()
             threads.append(th)
 
     print('apply_bpe.py to src-template...')
-    th = Thread(target=apply_bpe, args=['src-template'])
+    th = Thread(target=apply_bpe, args=['src-template', TMP, PREP, BPEROOT, BPE_CODE, GLOSSARIES])
     th.start()
     threads.append(th)
 
