@@ -26,7 +26,7 @@ def detokenize( x ):
     return x
 
 
-def translate( model_path, TGT_MOD, output_file, beam_size=1000 ):
+def translate( model_path, TGT_MOD, output_file, data_path, beam_size=1000 ):
     src_mod = osis_tran.load_osis_module(SRC_MOD, toascii=True)
 
 
@@ -35,7 +35,7 @@ def translate( model_path, TGT_MOD, output_file, beam_size=1000 ):
 
     #process = subprocess.run( ['cat', './fairseq_cli/interactive.py'],  stdout=subprocess.PIPE )
 
-    with subprocess.Popen( ['python', './fairseq_cli/interactive.py', './data-bin/bible.prep', '--beam', str(beam_size), '--path', model_path, '--cpu'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf-8' ) as process:
+    with subprocess.Popen( ['python', './fairseq_cli/interactive.py', data_path, '--beam', str(beam_size), '--path', model_path, '--cpu'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf-8' ) as process:
 
         for key in src_mod.keys():
 
@@ -62,8 +62,14 @@ def translate( model_path, TGT_MOD, output_file, beam_size=1000 ):
 
 
 if __name__ == "__main__":
-    TGT_MOD = "NETfree"
-    model_path = 'checkpoints/bible.prep/checkpoint_best.pt'
+    # TGT_MOD = "NETfree"
+    # model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
+    # data_path = './data-bin/bible.prep.amo.roman'
+    # output_file = f"{TGT_MOD}_out_roman.txt"
+    TGT_MOD = "AMO"
+    model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
+    data_path = './data-bin/bible.prep.amo.roman'
+    output_file = f"{TGT_MOD}_out_roman.txt"
 
-    with open( f"{TGT_MOD}_out.txt", "wt" ) as fout:
-        translate( model_path, TGT_MOD, fout )
+    with open( output_file, "wt" ) as fout:
+        translate( model_path, TGT_MOD, fout, data_path=data_path )
