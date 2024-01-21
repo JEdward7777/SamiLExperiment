@@ -99,7 +99,6 @@ TARGETS = list(TRAIN_STARTS)
 
 SRC='2TGreek'
 
-GLOSSARIES = ['TGT_' + m.lstrip('*') for m in MODULES] + ['TGT_TEMPLATE']
 
 #set the BIBLE_LOADER as configurable as well.
 BIBLE_LOADER = osis_tran.load_osis_module
@@ -113,6 +112,10 @@ def apply_bpe(fname, tmp, prep, bperoot, bpe_code, glossaries):
 
 
 def main():
+    #move GLOSSARIES to here so that if the MODULES get modified by a script using
+    #this module, the GLOSSARIES will be computed afterwards.
+    GLOSSARIES = ['TGT_' + m.lstrip('*') for m in MODULES] + ['TGT_TEMPLATE']
+
     modnames = [x.lstrip('*') for x in MODULES]
     assert SRC in modnames
     assert not (set(TRAIN_STARTS) - set(modnames)), (set(TRAIN_STARTS) - set(modnames))

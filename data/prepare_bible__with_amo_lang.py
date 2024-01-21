@@ -114,8 +114,15 @@ def main():
             return amo_module
         return default_loader( name, toascii=toascii )
     prepare_bible.BIBLE_LOADER = amo_loader_splicer
-    prepare_bible.MODULES.append( "AMO" )
-    prepare_bible.TARGETS.append( "AMO" )
+    #prepare_bible.MODULES.append( "AMO" )
+    #prepare_bible.TARGETS.append( "AMO" )
+    prepare_bible.MODULES = ["2TGreek","AMO",'NETfree', 'FinPR', 'GerNeUe']
+    prepare_bible.TARGETS = ["AMO"]
+
+
+    prepare_bible.PREP = 'bible.prep.with.amo2'
+    prepare_bible.TMP = prepare_bible.PREP + '/tmp'
+    prepare_bible.BPE_CODE = prepare_bible.PREP + '/code'
     prepare_bible.main()
 
     
