@@ -34,6 +34,19 @@
                 "--dictdir", "data-bin/bible.prep",
                 "--beam", "120", "--batch-size", "10", "valid.src"
             ]
+        },{
+            "name": "generate.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/fairseq_cli/generate.py",
+            "console": "internalConsole",
+            "justMyCode": false,
+            "args": [
+                "--batch-size", "10",
+                "--beam", "120",
+                "--remove-bpe",
+                "--results-path", "bible_prep_roman_output2"
+            ]
         }
     ]
 }

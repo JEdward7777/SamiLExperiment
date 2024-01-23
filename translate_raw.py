@@ -1,8 +1,11 @@
 import subprocess, sys
+import codecs
 
-sys.path.append('data')
+sys.path.append('data' )
+sys.path.append('data/subword-nmt' )
 import osis_tran
 SRC_MOD = '2TGreek'
+import apply_bpe
 
 # def translate( model_path, TGT_MOD ):
 #     src_mod = osis_tran.load_osis_module(SRC_MOD, toascii=True)
@@ -26,7 +29,13 @@ def detokenize( x ):
     return x
 
 
-def translate( model_path, TGT_MOD, output_file, data_path, beam_size=1000 ):
+def run_bpe( input_string, code_file, tgt_key, fail_glossary=False ):
+    codes = codecs.open(code_file, encoding='utf-8')
+    bpe = apply_bpe.BPE(codes=codes, glossaries=([tgt_key] if not fail_glossary else []))
+    return bpe.segment( input_string.strip() )
+
+
+def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=1000, fail_glossary=False ):
     src_mod = osis_tran.load_osis_module(SRC_MOD, toascii=True)
 
 
@@ -41,8 +50,10 @@ def translate( model_path, TGT_MOD, output_file, data_path, beam_size=1000 ):
 
             verse_in = f"TGT_{TGT_MOD} " + src_mod[key] + "\n"
 
+            verse_in_tokenized = run_bpe( verse_in, code_file=code_file, tgt_key=f"TGT_{TGT_MOD}", fail_glossary=fail_glossary )
+
             #result, error = process.communicate( verse_in )
-            process.stdin.write( verse_in )
+            process.stdin.write( verse_in_tokenized + "\n" )
             process.stdin.flush()
 
             while not (result := process.stdout.readline()).startswith( "H"):
@@ -66,10 +77,21 @@ if __name__ == "__main__":
     # model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
     # data_path = './data-bin/bible.prep.amo.roman'
     # output_file = f"{TGT_MOD}_out_roman.txt"
+
     TGT_MOD = "AMO"
     model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
     data_path = './data-bin/bible.prep.amo.roman'
     output_file = f"{TGT_MOD}_out_roman.txt"
+    fail_glossary = True
+    beam_size = 120
+    code_file = './data/bible.prep.with.amo/code'
+
+    # TGT_MOD = "NETfree"
+    # model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
+    # data_path = './data-bin/bible.prep.amo.roman'
+    # output_file = f"{TGT_MOD}_out_roman.txt"
+    # beam_size = 120
+    # code_file = './data/bible.prep.with.amo/code'
 
     with open( output_file, "wt" ) as fout:
-        translate( model_path, TGT_MOD, fout, data_path=data_path )
+        translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, fail_glossary=fail_glossary )
