@@ -103,6 +103,27 @@ python ./fairseq_cli/generate.py data-bin/bible.prep.full --path checkpoints/bib
 
 This will produce the output in the folder `results_full`.  The result is still sorted by sentence length, but if you sort by the number on the front of the line it puts it back into order.
 
+Here is how to output a full copy of the Bible in a chosen target language which was part of the training set:
+ 1. Open the file `translate_raw.py`.
+ 2. Find the location at the bottom of the file which calls main and passes in variables.
+ 3. Set the following variables:
+ 
+ | var name    | Example | Description                                           |  
+ | --------    | ------- | ----------------------------------------------|
+ | TGT_MOD     | 'NETfree' | name for the translation that you are targeting.  This is what shows up in the training files with `TGT_` on it, without the `TGT_`. |
+ | model_path  | 'checkpoints/bible.prep/checkpoint_best.pt' | The path to the trained model.  |
+ | data_path   | './data-bin/bible.prep' | Path to the compiled binary format. |
+ | output_file | f"{TGT_MOD}_out.txt"    | Name of the text file generated. |
+ | beam_size   | 120 |  A translating thing.  Bigger is generally better I suppose |
+ | code_file   | './data/bible.prep/code' | Path to tokenizer training. |
+ | fail_glossary | False | Ignore this, I trained once without properly tokenizing the target token and I needed to fail it here again to compensate. |
+ | use_cpu     | False | Set this if your GPU is busy, but it could take several days on your CPU |
+
+ 4. Run the output.
+``` bash
+python ./translate_raw.py
+```
+
 ## Existing translate instructions
 The following instructions use batch_translate.py which has had code entropy because fairseq is different now.  I am leaving this here for now so that it doesn't get lost and someone in the future might be able to make it work.
 
@@ -122,6 +143,3 @@ The output file has the translated sentences in length order. To sort them in th
 `$ ./sort_full.py <FinPR.raw.txt >FinPR.txt`
 
 For more useful information in the original README for fairseq-py, consult [README.fairseq.md](README.fairseq.md).
-
-He had 53 bibles.
-I have 38 bibles

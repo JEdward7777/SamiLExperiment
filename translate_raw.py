@@ -35,7 +35,7 @@ def run_bpe( input_string, code_file, tgt_key, fail_glossary=False ):
     return bpe.segment( input_string.strip() )
 
 
-def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=1000, fail_glossary=False ):
+def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=1000, fail_glossary=False, use_cpu=True ):
     src_mod = osis_tran.load_osis_module(SRC_MOD, toascii=True)
 
 
@@ -44,7 +44,11 @@ def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=
 
     #process = subprocess.run( ['cat', './fairseq_cli/interactive.py'],  stdout=subprocess.PIPE )
 
-    with subprocess.Popen( ['python', './fairseq_cli/interactive.py', data_path, '--beam', str(beam_size), '--path', model_path, '--cpu'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf-8' ) as process:
+    command = ['python', './fairseq_cli/interactive.py', data_path, '--beam', str(beam_size), '--path', model_path]
+    if use_cpu:
+        command.append('--cpu')
+
+    with subprocess.Popen( command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf-8' ) as process:
 
         for key in src_mod.keys():
 
@@ -78,20 +82,23 @@ if __name__ == "__main__":
     # data_path = './data-bin/bible.prep.amo.roman'
     # output_file = f"{TGT_MOD}_out_roman.txt"
 
-    TGT_MOD = "AMO"
+    # TGT_MOD = "AMO"
+    # model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
+    # data_path = './data-bin/bible.prep.amo.roman'
+    # output_file = f"{TGT_MOD}_out_roman_gpu.txt"
+    # fail_glossary = True
+    # beam_size = 120
+    # code_file = './data/bible.prep.with.amo/code'
+    # use_cpu = False
+
+    TGT_MOD = "NETfree"
     model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
     data_path = './data-bin/bible.prep.amo.roman'
     output_file = f"{TGT_MOD}_out_roman.txt"
-    fail_glossary = True
     beam_size = 120
     code_file = './data/bible.prep.with.amo/code'
-
-    # TGT_MOD = "NETfree"
-    # model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
-    # data_path = './data-bin/bible.prep.amo.roman'
-    # output_file = f"{TGT_MOD}_out_roman.txt"
-    # beam_size = 120
-    # code_file = './data/bible.prep.with.amo/code'
+    fail_glossary = False
+    use_cpu = False
 
     with open( output_file, "wt" ) as fout:
-        translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, fail_glossary=fail_glossary )
+        translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, fail_glossary=fail_glossary, use_cpu=use_cpu )
