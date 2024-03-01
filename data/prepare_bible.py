@@ -106,7 +106,7 @@ BIBLE_LOADER = osis_tran.load_osis_module
 def apply_bpe(fname, tmp, prep, bperoot, bpe_code, glossaries):
     with open(tmp + '/' + fname) as inf:
         with open(prep + '/' + fname, 'w') as outf:
-            cmd = (['python', bperoot+'/apply_bpe.py', '--glossaries'] + glossaries +
+            cmd = (['python3', bperoot+'/apply_bpe.py', '--glossaries'] + glossaries +
                    ['-c', bpe_code])
             run(cmd, stdin=inf, stdout=outf, check=True)
 
@@ -205,7 +205,7 @@ def main():
     print('Learning BPE...')
     with open(TMP + '/train.both') as inf:
         with open(BPE_CODE, 'w') as outf:
-            run(['python', BPEROOT + '/' + 'learn_bpe.py', '-s', str(BPE_TOKENS)],
+            run(['python3', BPEROOT + '/' + 'learn_bpe.py', '-s', str(BPE_TOKENS)],
                 stdin=inf, stdout=outf, check=True)
 
     threads = []
