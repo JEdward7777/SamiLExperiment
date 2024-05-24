@@ -14,7 +14,8 @@ REPL_CHARS = {
     '„': '"',
     '“': '"',
     '”': '"',
-    '’': "'"
+    '’': "'",
+    '–': "-",
 }
 
 RE = re.compile(r'<verse osisID="([^"]+)">(.*)</verse>')
@@ -47,7 +48,7 @@ SPACE_RE = re.compile(r' +')
 #         dic[key] = v
 #     return dic
 
-def load_osis_str( inp, toascii=False ):
+def load_osis_str( inp, toascii=False, lower=True ):
     key = "root"
     dic = OrderedDict()
     for line in inp.split('\n'):
@@ -63,7 +64,8 @@ def load_osis_str( inp, toascii=False ):
                 v = v.replace( r, t )
             v = TAG_RE.sub( ' ', v.strip() )
             v = SPACE_RE.sub( ' ', v )
-            v = v.lower()
+            if lower: 
+                v = v.lower()
             if toascii:
                 v = unidecode( v )
             v = v.strip()
