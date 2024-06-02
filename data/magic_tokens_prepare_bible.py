@@ -16,7 +16,7 @@ BPEROOT = 'subword-nmt'
 BPE_TOKENS = 30000
 CLEAN_RATIO = 1.5
 
-PREP = 'bible.prep'
+PREP = 'bible.prep.magic_tokens2'
 TMP = PREP + '/tmp'
 BPE_CODE = PREP + '/code'
 
@@ -135,7 +135,7 @@ def main():
     #this module, the GLOSSARIES will be computed afterwards.
     GLOSSARIES = ['TGT_' + m.lstrip('*') for m in MODULES] + ['TGT_TEMPLATE']
 
-    modnames = [x.lstrip('*') for x in MODULES]
+    #modnames = [x.lstrip('*') for x in MODULES]
     #assert not (set(TRAIN_STARTS) - set(modnames)), (set(TRAIN_STARTS) - set(modnames))
     #assert not (set(TARGETS) - set(modnames)), (set(TARGETS) - set(modnames))
 
@@ -226,9 +226,12 @@ def main():
             print(key, file=f)
 
     for s, d in [('tok', 'train'), ('val', 'valid')]:
-        CMD = ['perl', CLEAN, '-ratio', str(CLEAN_RATIO), TMP+'/'+s, 'src', 'tgt',
-               TMP + '/' + d, '1', '175']
-        run(CMD, check=True)
+        # CMD = ['perl', CLEAN, '-ratio', str(CLEAN_RATIO), TMP+'/'+s, 'src', 'tgt',
+        #        TMP + '/' + d, '1', '175']
+        # run(CMD, check=True)
+        #disable the clean process by just copying the files across.
+        run(f'cat {TMP}/{s}.src  > {TMP}/{d}.src', shell=True, check=True)
+        run(f'cat {TMP}/{s}.tgt  > {TMP}/{d}.tgt', shell=True, check=True)
 
     run('cat {tmp}/src-once {tmp}/train.tgt >{tmp}/train.both'.format(tmp=TMP),
         shell=True, check=True)
