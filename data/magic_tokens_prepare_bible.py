@@ -16,7 +16,7 @@ BPEROOT = 'subword-nmt'
 BPE_TOKENS = 30000
 CLEAN_RATIO = 1.5
 
-PREP = 'bible.prep.magic_tokens2'
+PREP = 'bible.prep.magic_tokens'
 TMP = PREP + '/tmp'
 BPE_CODE = PREP + '/code'
 
@@ -95,7 +95,6 @@ TRAIN_STARTS = {
     'GerNeUe': 'Exod'
 }
 
-SRC_TOKEN_EXTRA_WEIGHT = 2
 TARGET_EXTRA_PASSES = 2
 TARGETS = list(TRAIN_STARTS)
 
@@ -170,8 +169,8 @@ def main():
         for i in range(MAGIC_TOKEN_COUNT):
             mt = f"{reference.upper()}_MT_{i+1}".replace( " ", "_")
             magic_token_list.append(mt)
-            if not mt in GLOSSARIES:
-                GLOSSARIES.append(mt)
+            # if not mt in GLOSSARIES:
+            #     GLOSSARIES.append(mt)
         return " ".join(magic_token_list)
 
     src_data = []
@@ -202,11 +201,6 @@ def main():
     with open(TMP + '/protect', 'w') as f:
         print('TGT_[a-zA-Z0-9]+|[A-Z_:0-9]+_MT_[0-9]+', file=f)
 
-    # For BPE, learn source language only 1+SRC_TOKEN_EXTRA_WEIGHT times.
-    with open(TMP + '/src-once', 'w') as f:
-        for i in range(1+SRC_TOKEN_EXTRA_WEIGHT):
-            print( '\n'.join( gen_magic_token_string(reference) for reference in all_references), file=f)
-
 
     # Also create a file for the source exactly once - it's useful down the road
     #src_template = ['TGT_TEMPLATE ' + x for x in src_mod.values()]
@@ -233,11 +227,8 @@ def main():
         run(f'cat {TMP}/{s}.src  > {TMP}/{d}.src', shell=True, check=True)
         run(f'cat {TMP}/{s}.tgt  > {TMP}/{d}.tgt', shell=True, check=True)
 
-    run('cat {tmp}/src-once {tmp}/train.tgt >{tmp}/train.both'.format(tmp=TMP),
-        shell=True, check=True)
-
     print('Learning BPE...')
-    with open(TMP + '/train.both') as inf:
+    with open(TMP + '/train.tgt') as inf:
         with open(BPE_CODE, 'w') as outf:
             run(['python', BPEROOT + '/' + 'learn_bpe.py', '-s', str(BPE_TOKENS)],
                 stdin=inf, stdout=outf, check=True)
@@ -245,16 +236,19 @@ def main():
     threads = []
     for l in ('src', 'tgt'):
         for s in ('train', 'valid'):
+            #only parse the target text.  The source is only magic tokens.
             fname = s + '.' + l
-            print('apply_bpe.py to ' + fname + '...')
-            th = Thread(target=apply_bpe, args=[fname, TMP, PREP, BPEROOT, BPE_CODE, GLOSSARIES])
-            th.start()
-            threads.append(th)
+            if l == 'tgt':
+                print('apply_bpe.py to ' + fname + '...')
+                th = Thread(target=apply_bpe, args=[fname, TMP, PREP, BPEROOT, BPE_CODE, GLOSSARIES])
+                th.start()
+                threads.append(th)
+            else:
+                shutil.copy(TMP + '/' + fname, PREP + '/' + fname )
 
-    print('apply_bpe.py to src-template...')
-    th = Thread(target=apply_bpe, args=['src-template', TMP, PREP, BPEROOT, BPE_CODE, GLOSSARIES])
-    th.start()
-    threads.append(th)
+
+    #copy src-template
+    shutil.copy(TMP + '/src-template', PREP + '/src-template')
 
     for t in threads:
         t.join()

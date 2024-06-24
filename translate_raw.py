@@ -74,7 +74,43 @@ def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=
 
             print( f"{key} {verse_out}\n", file=output_file )
 
+def gen_magic_token_string(reference, magic_token_count):
+    magic_token_list = []
+    for i in range(magic_token_count):
+        mt = f"{reference.upper()}_MT_{i+1}".replace( " ", "_")
+        magic_token_list.append(mt)
+        # if not mt in GLOSSARIES:
+        #     GLOSSARIES.append(mt)
+    return " ".join(magic_token_list)
 
+def translate__magic_token( model_path, TGT_MOD, output_file, data_path, code_file, beam_size=1000, magic_token_count = 3, use_cpu=True ):
+    #load the NET_FREE just so we can get the references too.  If this is a different style ENG/ORG etc then the target translation this could be wrong.
+    net_free = osis_tran.load_osis_module( "NETfree", toascii=False )
+                                          
+                                          
+    command = ['python', './fairseq_cli/interactive.py', data_path, '--beam', str(beam_size), '--path', model_path]
+    if use_cpu:
+        command.append('--cpu')
+
+    with subprocess.Popen( command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf-8' ) as process:
+        for key in net_free.keys():
+            verse_in = f"TGT_{TGT_MOD} " + gen_magic_token_string(key, magic_token_count)  + "\n"
+
+            process.stdin.write( verse_in )
+            process.stdin.flush()
+
+            while not (result := process.stdout.readline()).startswith( "H" ):
+                pass
+
+            #remove the prefix and the number prefix.
+            prefix, score, verse_out = result.split( "\t", 2 )
+
+
+            verse_out = detokenize(verse_out)
+
+            print( f"{key}\n  Verse in {verse_in.strip()}\n  Verse out: {verse_out}\n")
+
+            print( f"{key} {verse_out}\n", file=output_file )
 
 if __name__ == "__main__":
     # TGT_MOD = "NETfree"
@@ -91,14 +127,30 @@ if __name__ == "__main__":
     # code_file = './data/bible.prep.with.amo/code'
     # use_cpu = False
 
-    TGT_MOD = "NETfree"
-    model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
-    data_path = './data-bin/bible.prep.amo.roman'
-    output_file = f"{TGT_MOD}_out_roman.txt"
-    beam_size = 120
-    code_file = './data/bible.prep.with.amo/code'
-    fail_glossary = False
-    use_cpu = False
+    # TGT_MOD = "NETfree"
+    # model_path = 'checkpoints/bible.prep.roman/checkpoint_best.pt'
+    # data_path = './data-bin/bible.prep.amo.roman'
+    # output_file = f"{TGT_MOD}_out_roman.txt"
+    # beam_size = 120
+    # code_file = './data/bible.prep.with.amo/code'
+    # fail_glossary = False
+    # use_cpu = False
 
+    # with open( output_file, "wt" ) as fout:
+    #     try:
+    #         translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, fail_glossary=fail_glossary, use_cpu=use_cpu )
+    #     except:
+    #         pass
+
+    model_path = 'checkpoints/bible.prep.magic_tokens/checkpoint246.pt'
+    TGT_MOD = "NETfree"
+    output_file = f"{TGT_MOD}_out_magic_token.txt"
+    data_path = "data-bin/bible.prep.magic_tokens"
+    beam_size = 1000
+    code_file = './data/bible.prep.magic_tokens/code'
+    use_cpu=True
     with open( output_file, "wt" ) as fout:
-        translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, fail_glossary=fail_glossary, use_cpu=use_cpu )
+        try:
+            translate__magic_token( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
+        except:
+            pass
