@@ -1,3 +1,4 @@
+import json
 import subprocess, sys
 import codecs
 
@@ -142,15 +143,37 @@ if __name__ == "__main__":
     #     except:
     #         pass
 
-    model_path = 'checkpoints/bible.prep.magic_tokens/checkpoint246.pt'
-    TGT_MOD = "NETfree"
-    output_file = f"{TGT_MOD}_out_magic_token.txt"
-    data_path = "data-bin/bible.prep.magic_tokens"
-    beam_size = 1000
-    code_file = './data/bible.prep.magic_tokens/code'
-    use_cpu=True
-    with open( output_file, "wt" ) as fout:
-        try:
-            translate__magic_token( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
-        except:
-            pass
+    # model_path = 'checkpoints/bible.prep.magic_tokens/checkpoint246.pt'
+    # TGT_MOD = "NETfree"
+    # output_file = f"{TGT_MOD}_out_magic_token.txt"
+    # data_path = "data-bin/bible.prep.magic_tokens"
+    # beam_size = 1000
+    # code_file = './data/bible.prep.magic_tokens/code'
+    # use_cpu=True
+    # with open( output_file, "wt" ) as fout:
+    #     try:
+    #         translate__magic_token( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
+    #     except:
+    #         pass    config_file = "translate_raw_config.json"
+
+
+    config_file = "translate_raw_config.json"
+    with open( config_file, "rt" ) as fin:
+        config = json.load( fin )
+
+    for TGT_MOD in config["TGT_MODS"]:
+        model_path = config["targets"][TGT_MOD]["model_path"]
+        data_path = config["targets"][TGT_MOD]["data_path"]
+        output_file = config["targets"][TGT_MOD]["output_file"] if "output_file" in config["targets"][TGT_MOD] else f"{TGT_MOD}_out.txt"
+        beam_size = config["targets"][TGT_MOD]["beam_size"] if "beam_size" in config["targets"][TGT_MOD] else 1000
+        code_file = config["targets"][TGT_MOD]["code_file"]
+        use_cpu = config["targets"][TGT_MOD]["use_cpu"] if "use_cpu" in config["targets"][TGT_MOD] else False
+
+        with open( output_file, "wt" ) as fout:
+            try:
+                if "translate_magic_token" in config["targets"][TGT_MOD] and config["targets"][TGT_MOD]["translate_magic_token"]:
+                    translate__magic_token( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
+                else:
+                    translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
+            except:
+                pass
