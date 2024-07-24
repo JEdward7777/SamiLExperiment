@@ -204,10 +204,24 @@ def main(cfg: FairseqConfig):
     logger.info("NOTE: hypothesis and token scores are output in base 2")
     logger.info("Type the input sentence and press return:")
     start_id = 0
+
+    forced_output_ids = None
     for inputs in buffered_read(cfg.interactive.input, cfg.interactive.buffer_size):
+
+        
+        for _input in inputs:
+            if _input.startswith("output:"):
+                forced_output = _input[len("output:") :].strip()
+                forced_output_ids = task.target_dictionary.encode_line(
+                    forced_output, add_if_not_exist=False, append_eos=False
+                ).long()
+        inputs = [x for x in inputs if not x.startswith("output:")]
+    
+        
         results = []
         for batch in make_batches(inputs, cfg, task, max_positions, encode_fn):
             bsz = batch.src_tokens.size(0)
+            forced_output_ids_batched = forced_output_ids.unsqueeze(0).repeat(bsz, 1)
             src_tokens = batch.src_tokens
             src_lengths = batch.src_lengths
             constraints = batch.constraints
@@ -216,6 +230,8 @@ def main(cfg: FairseqConfig):
                 src_lengths = src_lengths.cuda()
                 if constraints is not None:
                     constraints = constraints.cuda()
+                if forced_output_ids is not None:
+                    forced_output_ids_batched = forced_output_ids_batched.cuda()
 
             sample = {
                 "net_input": {
@@ -225,7 +241,7 @@ def main(cfg: FairseqConfig):
             }
             translate_start_time = time.time()
             translations = task.inference_step(
-                generator, models, sample, constraints=constraints
+                generator, models, sample, constraints=constraints, prefix_tokens=forced_output_ids_batched
             )
             translate_time = time.time() - translate_start_time
             total_translate_time += translate_time

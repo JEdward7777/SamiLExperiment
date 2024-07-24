@@ -160,6 +160,8 @@ def translate__magic_token__python_import( model_path, TGT_MOD, output_file, dat
     for key in net_free.keys():
         verse_in = f"TGT_{TGT_MOD} " + gen_magic_token_string(key, magic_token_count)  + "\n"
 
+        forced_output = run_bpe( "Once upon a time", code_file=code_file, tgt_key=f"TGT_{TGT_MOD}", fail_glossary=False )
+        stdin_writer_file.write( f"output: {forced_output}\n" )
         stdin_writer_file.write( verse_in )
         stdin_writer_file.flush()
 
@@ -175,6 +177,7 @@ def translate__magic_token__python_import( model_path, TGT_MOD, output_file, dat
 
             print( f"{key}\n  Verse in {verse_in.strip()}\n  Verse out n {n}: {verse_out}\n", file=stdout_save )
             print( f"{key} {n}: {verse_out}\n", file=output_file )
+            output_file.flush()
 
     #close things.
     stdin_writer_file.close()
@@ -251,4 +254,5 @@ if __name__ == "__main__":
                 else:
                     translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
             except:
+                print( f"The exception trace is {traceback.format_exc()}" )
                 pass
