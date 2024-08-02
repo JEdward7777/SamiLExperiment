@@ -2,6 +2,7 @@ import sys, json, os
 import threading
 import gradio as gr
 import translate_raw
+import JLDiff
 
 
 sys.path.append('data' )
@@ -77,11 +78,68 @@ def translate( language, reference, forced_output_string ):
 
     return verse_out
 
-def accept_word( language, reference, input_string, output_string ):
-    input_words = input_string.split()
-    output_words = output_string.split()
+
+def get_next_word( shorter, longer ):
+    difference = JLDiff.compute_diff( longer, shorter, axis_penalty=True )
+
+    in_index = -1
+    out_index = -1
+    seen_content = False
+
+    addition = ""
+    for diff in difference:
+        if diff.state == JLDiff.STATE_MATCH:
+            #match
+            in_index += 1
+            out_index += 1
+        elif diff.state == JLDiff.STATE_PASSING_2ND:
+            #deletion
+            in_index += 1
+        elif diff.state == JLDiff.STATE_PASSING_1ST:
+            #insertion
+            #if we insert past the end of the first string
+            #then take the insertion until the insertion
+            #is a whitespace unless we haven't seen content yet.
+            if in_index >= len(shorter):
+                if seen_content and diff.content == " ":
+                    break
+                else:
+                    if diff.content != " ":
+                        seen_content = True
+                    addition += diff.content
+            out_index += 1
+
+    return addition
 
 
+def accept_word( input_string, output_string ):
+    #The diff doesn't like to match on the front.
+    #so just feed it enough so that it can return something.
+
+    found_word = False
+
+    space_location = output_string.find( " " )
+
+    while not found_word and space_location != -1:
+        truncated_output_string = output_string[0:space_location]
+
+        addition = get_next_word( input_string, truncated_output_string )
+
+        if len( addition ) > 0:
+            found_word = True
+        else:
+            space_location = output_string.find( " ", space_location + 1 )
+    
+
+    if not found_word:
+        addition = get_next_word( input_string, output_string )
+
+
+    new_input_words = input_string + addition
+        
+    return new_input_words
+
+    #return input_string + get_next_word( input_string, output_string )
 
 languages = specific_config["languages"]
 references = list(src_mod.keys())
@@ -91,15 +149,15 @@ with gr.Blocks() as demo:
     sel_language = gr.Dropdown( languages, value=languages[0] )
     sel_reference = gr.Dropdown( references, value=references[0] )
 
-    input_textbox = gr.Textbox()
+    input_textbox = gr.Textbox( label="Translation start." )
 
     btn = gr.Button("Translate")
     output_textbox = gr.Textbox()
-    accept = gr.Button("Accept word")
+    #accept = gr.Button("Accept word")
 
     btn.click( translate, inputs=[sel_language, sel_reference, input_textbox], outputs=[output_textbox] )
 
-    #accept.click( accept_word, inputs=[sel_language, sel_reference, input_textbox,output_textbox], outputs=[input_textbox, output_textbox])
+    #accept.click( accept_word, inputs=[input_textbox,output_textbox], outputs=[input_textbox])
 
 launch_result = demo.launch(share=True)
 print( f"Launch result: {launch_result}", file=stdout_save )
