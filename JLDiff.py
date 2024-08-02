@@ -49,6 +49,20 @@ class lineCompIndex(object):
         self.previous = None
         self.state = STATE_PASSING_1ST
         self.content = ""
+    def __str__( self ):
+        result = ""
+        if self.state == STATE_PASSING_1ST:
+            result = "1st"
+        elif self.state == STATE_PASSING_2ND:
+            result = "2nd"
+        elif self.state == STATE_MATCH:
+            result = "M"
+        result += " e" + str( self.errorCount )
+        result += " " + self.content
+        return result
+    
+    def __repr__(self) -> str:
+        return str(self)
 
 u_intern_dict = {}
 def u_intern( value ):
@@ -57,7 +71,7 @@ def u_intern( value ):
     u_intern_dict[value]=value
     return value
 
-def compute_diff( file1, file2, talk=True ):
+def compute_diff( file1, file2, talk=True, axis_penalty=False ):
     lastLine = []
     thisLine = []
 
@@ -77,6 +91,7 @@ def compute_diff( file1, file2, talk=True ):
         thisLine.append( thisIndex )
         columnIndex += 1
 
+    rowIndex = 1
     for char1 in file1:
         lastLine = thisLine
         thisLine = []
@@ -99,31 +114,35 @@ def compute_diff( file1, file2, talk=True ):
         for char2 in file2:
             thisIndex = lineCompIndex()
 
-            if( char2 == char1 ):
-                thisIndex.previous = lastLine[ columnIndex-1 ]
-                #To keep from getting spurious single matches,
-                #see about adding some error in for the first matches.
-                if thisIndex.previous.state == STATE_MATCH:
-                    thisIndex.errorCount = thisIndex.previous.errorCount
-                else:
-                    thisIndex.errorCount = thisIndex.previous.errorCount #+ 1
 
-                thisIndex.state = STATE_MATCH
-                thisIndex.content = u_intern(char2)
-            else:
-                if lastLine[ columnIndex ].errorCount < thisLine[ columnIndex-1 ].errorCount:
-                    thisIndex.previous = lastLine[ columnIndex ]
-                    thisIndex.content = u_intern(char1)
-                    thisIndex.state = STATE_PASSING_1ST
-                else:
-                    thisIndex.previous = thisLine[ columnIndex-1 ]
-                    thisIndex.content = u_intern(char2)
-                    thisIndex.state = STATE_PASSING_2ND
+            #just assume it will in this direction.
+            thisIndex.previous = thisLine[ columnIndex-1 ]
+            thisIndex.content = u_intern(char2)
+            thisIndex.state = STATE_PASSING_2ND
+            thisIndex.errorCount = thisIndex.previous.errorCount+1
 
+            #but if the other direction is better overwrite.
+            if lastLine[ columnIndex ].errorCount+1 < thisIndex.errorCount:
+                thisIndex.previous = lastLine[ columnIndex ]
+                thisIndex.content = u_intern(char1)
+                thisIndex.state = STATE_PASSING_1ST
                 thisIndex.errorCount = thisIndex.previous.errorCount+1
+
+            #if we have a match we have a third option
+            if( char2 == char1 ):
+                axis_penalty_amount = abs(columnIndex - rowIndex)*1e-5 if axis_penalty else 0
+
+                if lastLine[ columnIndex-1 ].errorCount+axis_penalty_amount < thisIndex.errorCount:
+
+                    thisIndex.previous = lastLine[ columnIndex-1 ]
+                    thisIndex.errorCount = thisIndex.previous.errorCount+axis_penalty_amount
+
+                    thisIndex.state = STATE_MATCH
+                    thisIndex.content = u_intern(char2)
 
             thisLine.append( thisIndex )
             columnIndex += 1
+        rowIndex += 1
 
     backwardsList = []
     currentNode = thisLine[ len( thisLine )-1 ]
