@@ -221,7 +221,8 @@ def main(cfg: FairseqConfig):
         results = []
         for batch in make_batches(inputs, cfg, task, max_positions, encode_fn):
             bsz = batch.src_tokens.size(0)
-            forced_output_ids_batched = forced_output_ids.unsqueeze(0).repeat(bsz, 1)
+            if forced_output_ids is not None:
+                forced_output_ids_batched = forced_output_ids.unsqueeze(0).repeat(bsz, 1)
             src_tokens = batch.src_tokens
             src_lengths = batch.src_lengths
             constraints = batch.constraints
@@ -232,6 +233,8 @@ def main(cfg: FairseqConfig):
                     constraints = constraints.cuda()
                 if forced_output_ids is not None:
                     forced_output_ids_batched = forced_output_ids_batched.cuda()
+                else:
+                    forced_output_ids_batched = None
 
             sample = {
                 "net_input": {

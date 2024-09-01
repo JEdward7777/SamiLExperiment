@@ -27,7 +27,7 @@ def main():
          tm_config = json.load(fin)
     config = tm_config["configs"][tm_config["active_config"]]
 
-    source_language = config["source_language"]
+    source_language = config["source_language"] if "source_language" in config else tm_config["active_config"]
 
     #now figure out where to find the language.
     if config["module_source"] == "osis_module":
@@ -36,7 +36,7 @@ def main():
         raise ValueError(f"Unknown module source {config['module_source']}")
     
     #now truncate the data if the key exists for it.
-    if "truncate" in config:
+    if "truncate" in config and config["truncate"] > 0 and config["truncate"] < len(source_module):
         source_module = OrderedDict(itertools.islice(source_module.items(), config["truncate"])) 
 
     
@@ -66,9 +66,10 @@ def main():
 
 
     #some testing
-    source_module_full = osis_tran.load_osis_module(source_language)
+    source_module_full = osis_tran.load_osis_module(source_language,lower=False)
     verse_right = source_module_full[list(source_module_full.keys())[-2]]
     verse_wrong = verse_right
+    if config["lower_case"]: verse_wrong = verse_wrong.lower()
     if config["unidecode"]: verse_wrong = unidecode(verse_wrong)
     if config["tokenize"]: verse_wrong = run_bpe(verse_wrong, code_file=config["code_file"], glossaries=[])
     verse_fixed = list(tm.execute([verse_wrong]))[0]
