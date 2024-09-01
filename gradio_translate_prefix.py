@@ -3,6 +3,8 @@ import threading
 import gradio as gr
 import translate_raw
 import JLDiff
+from unidecode import unidecode
+from sentence_transmorgrifier.transmorgrify import Transmorgrifier
 
 
 sys.path.append('data' )
@@ -49,6 +51,7 @@ def main_wrapper():
 fairseq_thread = threading.Thread(target=main_wrapper)
 fairseq_thread.start()
 
+tm = Transmorgrifier()
 
 def translate( language, reference, forced_output_string ):
     if specific_config["translate_magic_token"]:
@@ -58,7 +61,10 @@ def translate( language, reference, forced_output_string ):
         verse_in = translate_raw.run_bpe( verse_in, code_file=specific_config['code_file'], tgt_key=f"TGT_{language}", fail_glossary=False ) + "\n"
 
     if forced_output_string:
-        forced_output = translate_raw.run_bpe( forced_output_string, code_file=specific_config['code_file'], tgt_key=f"TGT_{language}", fail_glossary=False )
+        forced_output = forced_output_string
+        forced_output = forced_output.lower()
+        forced_output = unidecode(forced_output)
+        forced_output = translate_raw.run_bpe( forced_output, code_file=specific_config['code_file'], tgt_key=f"TGT_{language}", fail_glossary=False )
     else:
         forced_output = ""
     stdin_writer_file.write( f"output: {forced_output}\n" )
@@ -75,6 +81,14 @@ def translate( language, reference, forced_output_string ):
 
 
     verse_out = translate_raw.detokenize(verse_out)
+
+    if "tm_models" in specific_config:
+        tm_models_path = specific_config["tm_models"]
+        lang_model_path = tm_models_path.format( lang=language )
+        if os.path.exists( lang_model_path ):
+            tm.load( lang_model_path )
+
+            verse_out = list(tm.execute([verse_out]))[0]
 
     return verse_out
 

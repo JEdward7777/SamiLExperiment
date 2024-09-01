@@ -9,3 +9,6 @@
 [submodule "data/subword-nmt"]
 	path = data/subword-nmt
 	url = https://github.com/sliedes/subword-nmt
+[submodule "data/subword-nmt-2"]
+	path = data/subword-nmt-2
+	url = https://github.com/rsennrich/subword-nmt
