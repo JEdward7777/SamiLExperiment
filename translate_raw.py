@@ -3,6 +3,8 @@ import os
 import subprocess, sys
 import codecs
 import threading
+import traceback
+from sentence_transmorgrifier.transmorgrify import Transmorgrifier
 
 sys.path.append('data' )
 sys.path.append('data/subword-nmt' )
@@ -38,7 +40,7 @@ def run_bpe( input_string, code_file, tgt_key, fail_glossary=False ):
     return bpe.segment( input_string.strip() )
 
 
-def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=1000, fail_glossary=False, use_cpu=True ):
+def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=1000, fail_glossary=False, use_cpu=True, tm_model_path=None ):
     src_mod = osis_tran.load_osis_module(SRC_MOD, toascii=True)
 
 
@@ -50,6 +52,12 @@ def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=
     command = ['python', './fairseq_cli/interactive.py', data_path, '--beam', str(beam_size), '--path', model_path]
     if use_cpu:
         command.append('--cpu')
+
+    tm_model = None
+    if tm_model_path:
+        tm_model = Transmorgrifier()
+        tm_model.load( tm_model_path )
+
 
     with subprocess.Popen( command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf-8' ) as process:
 
@@ -73,6 +81,10 @@ def translate( model_path, TGT_MOD, output_file, data_path, code_file,beam_size=
 
             verse_out = detokenize(verse_out)
 
+            if tm_model:
+                verse_out = list( tm_model.execute( [verse_out] ) )[0]
+        
+
             print( f"{key}\n  Verse in {verse_in.strip()}\n  Verse out: {verse_out}\n")
 
             print( f"{key} {verse_out}\n", file=output_file )
@@ -86,7 +98,7 @@ def gen_magic_token_string(reference, magic_token_count):
         #     GLOSSARIES.append(mt)
     return " ".join(magic_token_list)
 
-def translate__magic_token( model_path, TGT_MOD, output_file, data_path, code_file, beam_size=1000, magic_token_count = 3, use_cpu=True ):
+def translate__magic_token( model_path, TGT_MOD, output_file, data_path, code_file, beam_size=1000, magic_token_count = 3, use_cpu=True, tm_model_path=None ):
     #load the NET_FREE just so we can get the references too.  If this is a different style ENG/ORG etc then the target translation this could be wrong.
     net_free = osis_tran.load_osis_module( "NETfree", toascii=False )
                                           
@@ -94,6 +106,11 @@ def translate__magic_token( model_path, TGT_MOD, output_file, data_path, code_fi
     command = ['python', './fairseq_cli/interactive.py', data_path, '--beam', str(beam_size), '--path', model_path]
     if use_cpu:
         command.append('--cpu')
+
+    tm_model = None
+    if tm_model_path:
+        tm_model = Transmorgrifier()
+        tm_model.load( tm_model_path )
 
     with subprocess.Popen( command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, encoding='utf-8' ) as process:
         for key in net_free.keys():
@@ -111,12 +128,15 @@ def translate__magic_token( model_path, TGT_MOD, output_file, data_path, code_fi
 
             verse_out = detokenize(verse_out)
 
+            if tm_model:
+                verse_out = list( tm_model.execute( [verse_out] ) )[0]
+
             print( f"{key}\n  Verse in {verse_in.strip()}\n  Verse out: {verse_out}\n")
 
             print( f"{key} {verse_out}\n", file=output_file )
 
 
-def translate__magic_token__python_import( model_path, TGT_MOD, output_file, data_path, code_file, beam_size=1000, magic_token_count = 3, use_cpu=True, nbest=1 ):
+def translate__magic_token__python_import( model_path, TGT_MOD, output_file, data_path, code_file, beam_size=1000, magic_token_count = 3, use_cpu=True, nbest=1, tm_model_path=None ):
     #load the NET_FREE just so we can get the references too.  If this is a different style ENG/ORG etc then the target translation this could be wrong.
     net_free = osis_tran.load_osis_module( "NETfree", toascii=False )
                                           
@@ -127,6 +147,11 @@ def translate__magic_token__python_import( model_path, TGT_MOD, output_file, dat
     command = ['./fairseq_cli/interactive.py', data_path, '--beam', str(beam_size), '--path', model_path, '--nbest', str(nbest)]
     if use_cpu:
         command.append('--cpu')
+
+    tm_model = None
+    if tm_model_path:
+        tm_model = Transmorgrifier()
+        tm_model.load( tm_model_path )
 
 
     # Create pipes for stdin and stdout
@@ -162,8 +187,8 @@ def translate__magic_token__python_import( model_path, TGT_MOD, output_file, dat
 
         # forced_output = run_bpe( "Once upon a time", code_file=code_file, tgt_key=f"TGT_{TGT_MOD}", fail_glossary=False )
         # stdin_writer_file.write( f"output: {forced_output}\n" )
-        # stdin_writer_file.write( verse_in )
-        # stdin_writer_file.flush()
+        stdin_writer_file.write( verse_in )
+        stdin_writer_file.flush()
 
         for n in range(nbest):
             while not (result := stdout_reader_file.readline()).startswith( "H" ):
@@ -174,6 +199,9 @@ def translate__magic_token__python_import( model_path, TGT_MOD, output_file, dat
 
 
             verse_out = detokenize(verse_out)
+
+            if tm_model:
+                verse_out = list( tm_model.execute( [verse_out] ) )[0]
 
             print( f"{key}\n  Verse in {verse_in.strip()}\n  Verse out n {n}: {verse_out}\n", file=stdout_save )
             print( f"{key} {n}: {verse_out}\n", file=output_file )
@@ -245,14 +273,16 @@ if __name__ == "__main__":
         beam_size = config["targets"][TGT_MOD]["beam_size"] if "beam_size" in config["targets"][TGT_MOD] else 1000
         code_file = config["targets"][TGT_MOD]["code_file"]
         use_cpu = config["targets"][TGT_MOD]["use_cpu"] if "use_cpu" in config["targets"][TGT_MOD] else False
+        tm_model_path = config["targets"][TGT_MOD]["tm_model_path"] if "tm_model_path" in config["targets"][TGT_MOD] else None
+
 
         with open( output_file, "wt" ) as fout:
             try:
                 if "translate_magic_token" in config["targets"][TGT_MOD] and config["targets"][TGT_MOD]["translate_magic_token"]:
                     #translate__magic_token( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
-                    translate__magic_token__python_import( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
+                    translate__magic_token__python_import( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu, tm_model_path=tm_model_path )
                 else:
-                    translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu )
+                    translate( model_path, TGT_MOD, fout, data_path=data_path, beam_size=beam_size, code_file=code_file, use_cpu=use_cpu, tm_model_path=tm_model_path )
             except:
                 print( f"The exception trace is {traceback.format_exc()}" )
                 pass
