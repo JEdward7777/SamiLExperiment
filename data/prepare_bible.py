@@ -11,7 +11,8 @@ import osis_tran
 SCRIPTS = 'mosesdecoder/scripts'
 TOKENIZER = SCRIPTS + '/tokenizer/tokenizer.perl'
 CLEAN = SCRIPTS + '/training/clean-corpus-n.perl'
-BPEROOT = 'subword-nmt'
+#BPEROOT = 'subword-nmt'
+BPEROOT = 'subword-nmt-2'
 
 BPE_TOKENS = 30000
 CLEAN_RATIO = 1.5
@@ -106,8 +107,12 @@ BIBLE_LOADER = osis_tran.load_osis_module
 def apply_bpe(fname, tmp, prep, bperoot, bpe_code, glossaries):
     with open(tmp + '/' + fname) as inf:
         with open(prep + '/' + fname, 'w') as outf:
-            cmd = (['python3', bperoot+'/apply_bpe.py', '--glossaries'] + glossaries +
-                   ['-c', bpe_code])
+            # cmd = (['python3', bperoot+'/apply_bpe.py', '--glossaries'] + glossaries +
+            #        ['-c', bpe_code])
+            #use a regulare expression instead of the list:
+
+            cmd = (['python3', bperoot+'/apply_bpe.py', '--glossaries', 'TGT_\\S+',
+                   '-c', bpe_code])
             run(cmd, stdin=inf, stdout=outf, check=True)
 
 
@@ -171,7 +176,7 @@ def main():
 
     print('Preprocessing train data...')
     with open(TMP + '/protect', 'w') as f:
-        print('TGT_[a-zA-Z0-9]+', file=f)
+        print('TGT_\\S+', file=f)
 
     # For BPE, learn source language only 1+SRC_TOKEN_EXTRA_WEIGHT times.
     with open(TMP + '/src-once', 'w') as f:
