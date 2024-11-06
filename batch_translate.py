@@ -17,7 +17,8 @@ import os
 import torch
 
 import fairseq
-from fairseq import dictionary, indexed_dataset, utils, options
+#from fairseq import dictionary, indexed_dataset, utils, options
+from fairseq import indexed_dataset, utils, options
 from fairseq.tokenizer import Tokenizer
 from fairseq.sequence_generator import SequenceGenerator
 

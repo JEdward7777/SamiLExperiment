@@ -79,6 +79,11 @@ def translate( language, reference, forced_output_string ):
     #remove the prefix and the number prefix.
     prefix, score, verse_out = result.split( "\t", 2 )
 
+    # #remove the number of tokens from the output that are the number of tokens from the forced_output.
+    # forced_output_token_num = len(forced_output.split())
+    # if forced_output_token_num > 0:
+    #     verse_out = " ".join( verse_out.split()[forced_output_token_num:] )
+
 
     verse_out = translate_raw.detokenize(verse_out)
 
