@@ -28,7 +28,7 @@ def load_silnlp( vref, versedata, toascii ):
 
                 #(###:###) with nothing using regex.
                 line_before = versedata_line
-                versedata_line = re.sub( r"^ *\( *\d+:\d+ *\)", "", versedata_line )
+                versedata_line = re.sub( r"^ *\( *\d+:\d+ *\)", "", versedata_line ).strip()
 
                 if vref_line and versedata_line and versedata_line != "<range>":
                     if not toascii:
@@ -83,8 +83,9 @@ def main():
     ebible_module_names_without_english = [x for x in ebible_module_names if not x.startswith("eng-")]
 
     #for debugging just truncated the list to the first 4
-    ebible_module_names_without_english = ebible_module_names_without_english[:4]
-    ebible_module_names_without_english.append( selected_source )
+    #ebible_module_names_without_english = ebible_module_names_without_english[:4]
+    if selected_source not in ebible_module_names_without_english: 
+        ebible_module_names_without_english.append( selected_source )
 
     #add a * on the start of all of them.
     ebible_module_names_without_english = ["*"+x for x in ebible_module_names_without_english]
