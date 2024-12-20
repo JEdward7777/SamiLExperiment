@@ -12,7 +12,41 @@ import logging
 import math
 import os
 import sys
+import time
+import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+
+def cool_off_with_probe():
+    """
+    My room gets too hot when training, so this will check if a config file exists for this function
+    and if it does it will wait for the temperature in the room to drop sufficiently before it continues on to
+    The next epoch.
+    """
+
+    if os.path.exists("temp_probe_config.json"):
+        with open("temp_probe_config.json") as f:
+            config = json.load(f)
+        import temper
+        tp = temper.Temper()
+        while True:
+            current_time = time.localtime()
+            current_hour = current_time.tm_hour
+            
+            target_temp = config[0]["temp"]  # Default to the first temp
+            for i, hourly_config in enumerate(config):
+                if hourly_config["hour"] == current_hour:
+                    target_temp = hourly_config["temp"]
+                    break
+                elif hourly_config["hour"] > current_hour:
+                    target_temp = config[i - 1]["temp"] if i > 0 else hourly_config["temp"]
+                    break
+
+            temp = tp.read()[0]['internal temperature'] * 9 / 5 + 32
+            if temp >= target_temp:
+                time.sleep(10)  # Wait before checking again
+            else:
+                break  # Exit loop if temperature is less than target_temp
 
 # We need to setup root logger before importing any fairseq libraries.
 logging.basicConfig(
@@ -193,6 +227,9 @@ def main(cfg: FairseqConfig) -> None:
     train_meter = meters.StopwatchMeter()
     train_meter.start()
     while epoch_itr.next_epoch_idx <= max_epoch:
+        cool_off_with_probe()
+
+
         if lr <= cfg.optimization.stop_min_lr:
             logger.info(
                 f"stopping training because current learning rate ({lr}) is smaller "
