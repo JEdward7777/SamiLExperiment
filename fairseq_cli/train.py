@@ -17,36 +17,55 @@ import json
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
-def cool_off_with_probe():
+def cool_off_with_probe( quiteish=False ):
     """
     My room gets too hot when training, so this will check if a config file exists for this function
     and if it does it will wait for the temperature in the room to drop sufficiently before it continues on to
     The next epoch.
     """
-
-    if os.path.exists("temp_probe_config.json"):
-        with open("temp_probe_config.json") as f:
-            config = json.load(f)
-        import temper
-        tp = temper.Temper()
-        while True:
-            current_time = time.localtime()
-            current_hour = current_time.tm_hour
-            
-            target_temp = config[0]["temp"]  # Default to the first temp
-            for i, hourly_config in enumerate(config):
-                if hourly_config["hour"] == current_hour:
-                    target_temp = hourly_config["temp"]
+    try:
+        count_out = 0
+        if os.path.exists("temp_probe_config.json"):
+            with open("temp_probe_config.json") as f:
+                config = json.load(f)
+            import temper
+            tp = temper.Temper()
+            while True:
+                current_time = time.localtime()
+                current_hour = current_time.tm_hour
+    
+                target_temp = config[-1]["temp"]  # Default to the last temp
+                for i, hourly_config in enumerate(config):
+                    if hourly_config['hour'] <= current_hour:
+                        target_temp = hourly_config['temp']
+                
+                read_result = tp.read()[0]
+    
+                if 'internal temperature' not in read_result: 
+                    print( "internal temperature missing" )
                     break
-                elif hourly_config["hour"] > current_hour:
-                    target_temp = config[i - 1]["temp"] if i > 0 else hourly_config["temp"]
+    
+                temp = read_result['internal temperature'] * 9 / 5 + 32 - 1.658
+    
+                if not quiteish: print(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Currently {temp:.1f}F, target {target_temp}F")
+                
+    
+                if temp >= target_temp:
+                    print( f"\nTemp is {temp}F at {time.strftime('%Y-%m-%d %H:%M:%S')} Sleeping to reach {target_temp}F.")
+                    time.sleep(10)  # Wait before checking again
+                else:
+                    break  # Exit loop if temperature is less than target_temp
+    
+                count_out += 1
+                if count_out > 360:
                     break
+        else:
+            if not quiteish:
+                print("No config file found for temperature probe")
+                print(f"Current directory is {os.path.abspath(os.getcwd())}")
+    except Exception:
+        print( "Some exception checking temp probe" )
 
-            temp = tp.read()[0]['internal temperature'] * 9 / 5 + 32
-            if temp >= target_temp:
-                time.sleep(10)  # Wait before checking again
-            else:
-                break  # Exit loop if temperature is less than target_temp
 
 # We need to setup root logger before importing any fairseq libraries.
 logging.basicConfig(
@@ -362,6 +381,8 @@ def train(
     num_updates = trainer.get_num_updates()
     logger.info("Start iterating over samples")
     for i, samples in enumerate(progress):
+        if i % 100 == 0:
+            cool_off_with_probe( quiteish=True )
         with metrics.aggregate("train_inner"), torch.autograd.profiler.record_function(
             "train_step-%d" % i
         ):
