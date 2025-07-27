@@ -134,6 +134,7 @@ def translate__magic_token( model_path, TGT_MOD, output_file, data_path, code_fi
             print( f"{key}\n  Verse in {verse_in.strip()}\n  Verse out: {verse_out}\n")
 
             print( f"{key} {verse_out}\n", file=output_file )
+            output_file.flush()
 
 
 def translate__magic_token__python_import( model_path, TGT_MOD, output_file, data_path, code_file, beam_size=1000, magic_token_count = 3, use_cpu=True, nbest=1, tm_model_path=None ):
